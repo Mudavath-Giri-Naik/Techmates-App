@@ -1,20 +1,16 @@
 // App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginScreen from './app/screens/LoginScreen';
-import HomeScreen from './app/screens/HomeScreen';
-import { RootStackParamList } from './app/types';
+import AppNavigator from './app/navigation/AppNavigator';
+import { LogBox } from 'react-native';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+// Optional: Ignore specific warnings if they are known and benign
+LogBox.ignoreLogs(['Sending `onAnimatedValueUpdate` with no listeners registered.']);
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Login" component={LoginScreen} options={{headerShown: false}}/>
-        <Stack.Screen name="Home" component={HomeScreen} />
-      </Stack.Navigator>
+      <AppNavigator />
     </NavigationContainer>
   );
 }

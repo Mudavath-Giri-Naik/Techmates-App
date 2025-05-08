@@ -20,42 +20,39 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
-import { FIREBASE_AUTH } from '../../firebaseConfig'; // Adjust path if needed
+import { FIREBASE_AUTH } from '../../firebaseConfig'; // Path is correct
 import Icon from 'react-native-vector-icons/Feather';
 
 // --- Configuration ---
-const ALLOWED_EMAIL_DOMAINS = ['@mvgrce.edu.in'];
+const ALLOWED_EMAIL_DOMAINS = ['@mvgrce.edu.in']; // Keep your domain restriction
 const PRIMARY_COLOR = '#0052FF';
-const LIGHT_BLUE_ACCENT = '#65a7fc'; // Curve color
+const LIGHT_BLUE_ACCENT = '#65a7fc';
 const TEXT_COLOR_DARK = '#1A202C';
 const TEXT_COLOR_MEDIUM = '#4A5568';
 const TEXT_COLOR_LIGHT = '#A0AEC0';
 const INPUT_BORDER_COLOR = '#E2E8F0';
 const ERROR_COLOR = '#E53E3E';
 const WHITE_COLOR = '#FFFFFF';
-// Background Bubble Colors (with transparency)
-const BUBBLE_COLOR_1 = 'rgba(0, 196, 255, 0.15)'; // Lighter accent blue, semi-transparent
-const BUBBLE_COLOR_2 = 'rgba(0, 82, 255, 0.1)'; // Lighter primary blue, semi-transparent
+const BUBBLE_COLOR_1 = 'rgba(0, 196, 255, 0.15)';
+const BUBBLE_COLOR_2 = 'rgba(0, 82, 255, 0.1)';
 
 // --- Types ---
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<NavigationProp>(); // Still useful for other potential navigation (e.g., Forgot Password)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  // Error States
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
   const auth = FIREBASE_AUTH;
 
-  // --- Input Validation ---
   const validateInputs = useCallback(() => {
     let isValid = true;
     setEmailError(null);
@@ -88,7 +85,6 @@ const LoginScreen = () => {
     return isValid;
   }, [email, password]);
 
-   // --- Error Handling ---
    const handleAuthError = (error: any) => {
     let friendlyMessage = 'An unexpected error occurred. Please try again.';
     const errorCode = error?.code;
@@ -101,7 +97,7 @@ const LoginScreen = () => {
             break;
         case 'auth/user-not-found':
         case 'auth/wrong-password':
-        case 'auth/invalid-credential':
+        case 'auth/invalid-credential': // Catches invalid login attempts generally
             setGeneralError('Incorrect email or password. Please try again.');
             break;
         case 'auth/user-disabled':
@@ -124,7 +120,6 @@ const LoginScreen = () => {
       }
     };
 
-  // --- Firebase Authentication ---
   const handleAuthentication = async () => {
     if (!validateInputs()) return;
     setLoading(true);
@@ -133,12 +128,14 @@ const LoginScreen = () => {
       if (isLoginMode) {
         await signInWithEmailAndPassword(auth, email, password);
         console.log('Signed in successfully!');
-        navigation.replace('Home');
+        // navigation.replace('Home'); // REMOVED: AppNavigator will handle navigation
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
         console.log('User account created & signed in!');
-        navigation.replace('Home');
+        // navigation.replace('Home'); // REMOVED: AppNavigator will handle navigation
       }
+      // No explicit navigation needed here.
+      // AppNavigator's onAuthStateChanged will handle navigating to the main app.
     } catch (error: any) {
       console.error("Authentication Error:", error);
       handleAuthError(error);
@@ -147,7 +144,6 @@ const LoginScreen = () => {
     }
   };
 
-  // --- UI Toggles ---
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setEmail(''); setPassword('');
@@ -157,19 +153,15 @@ const LoginScreen = () => {
 
   const togglePasswordVisibility = () => setIsPasswordVisible(!isPasswordVisible);
 
-  // --- Render ---
   return (
-    // Root container holds everything, including background elements
     <View style={styles.rootContainer}>
        <StatusBar barStyle="dark-content" backgroundColor={WHITE_COLOR} />
 
-        {/* Background Decorative Bubbles */}
         <View style={[styles.backgroundBubbleBase, styles.bubble1]} />
         <View style={[styles.backgroundBubbleBase, styles.bubble2]} />
         <View style={[styles.backgroundBubbleBase, styles.bubble3]} />
         <View style={[styles.backgroundBubbleBase, styles.bubble4]} />
 
-        {/* Keyboard avoiding view wraps the scrollable content */}
         <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.keyboardAvoidingContainer}
@@ -178,7 +170,6 @@ const LoginScreen = () => {
                 contentContainerStyle={styles.scrollContainer}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Content container holds the inputs/buttons */}
                 <View style={styles.contentContainer}>
                     <Text style={styles.title}>
                     {isLoginMode ? 'Sign in' : 'Create Account'}
@@ -193,7 +184,6 @@ const LoginScreen = () => {
                     <Text style={styles.generalErrorText}>{generalError}</Text>
                     )}
 
-                    {/* Email Input Group */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Email</Text>
                         <TextInput
@@ -213,7 +203,6 @@ const LoginScreen = () => {
                         {emailError && <Text style={styles.errorText}>{emailError}</Text>}
                     </View>
 
-                    {/* Password Input Group */}
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>Password</Text>
                         <View style={[styles.passwordContainer, passwordError ? styles.inputError : null]}>
@@ -238,12 +227,16 @@ const LoginScreen = () => {
                     </View>
 
                     {isLoginMode && (
-                        <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => {/* TODO: Add forgot password logic */}}>
+                        <TouchableOpacity style={styles.forgotPasswordButton} onPress={() => {
+                            // TODO: Add forgot password logic
+                            // Example: navigation.navigate('ForgotPassword');
+                            // (You'd need to add 'ForgotPassword' to RootStackParamList)
+                            alert('Forgot Password functionality to be implemented.');
+                        }}>
                             <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
                         </TouchableOpacity>
                     )}
 
-                    {/* Action Button */}
                     <TouchableOpacity
                         style={[styles.button, loading && styles.buttonDisabled]}
                         onPress={handleAuthentication}
@@ -259,7 +252,6 @@ const LoginScreen = () => {
                         )}
                     </TouchableOpacity>
 
-                    {/* Toggle Mode Link */}
                     <TouchableOpacity onPress={toggleMode} style={styles.toggleButton}>
                         <Text style={styles.toggleButtonText}>
                             {isLoginMode ? "Don't have an account? " : 'Already have an account? '}
@@ -273,7 +265,6 @@ const LoginScreen = () => {
             </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Bottom Curve Decoration (ensure it's after bubbles in JSX for layering if needed, though zIndex handles it) */}
         <View style={styles.bottomCurveContainer}>
              <View style={styles.bottomCurve} />
         </View>
@@ -286,15 +277,14 @@ export default LoginScreen;
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-// --- Styles ---
 const styles = StyleSheet.create({
   rootContainer: {
     flex: 1,
-    backgroundColor: WHITE_COLOR, // Base background
+    backgroundColor: WHITE_COLOR,
   },
   keyboardAvoidingContainer: {
     flex: 1,
-    zIndex: 1, // Ensure KAV is above background elements but below potential modals
+    zIndex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -302,10 +292,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 150, // Space above the curve
+    paddingBottom: 150,
     paddingTop: 40,
-    zIndex: 1, // Content must be above background bubbles and curve
-    backgroundColor: 'transparent', // Ensure content area doesn't block bubbles with its own bg
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   title: {
     fontSize: 32,
@@ -331,7 +321,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   input: {
-    backgroundColor: WHITE_COLOR, // Input field background
+    backgroundColor: WHITE_COLOR,
     borderWidth: 1,
     borderColor: INPUT_BORDER_COLOR,
     borderRadius: 12,
@@ -351,9 +341,9 @@ const styles = StyleSheet.create({
   },
   inputPassword: {
       flex: 1,
-      paddingLeft: 16, // Keep padding consistent
-      paddingRight: 10, // Reduce right padding a bit
-      paddingVertical: 14, // Use vertical padding
+      paddingLeft: 16,
+      paddingRight: 10,
+      paddingVertical: 14,
       fontSize: 16,
       color: TEXT_COLOR_DARK,
       height: '100%',
@@ -427,8 +417,6 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
     fontWeight: '600',
   },
-
-  // --- Bottom Curve Styles ---
   bottomCurveContainer: {
     position: 'absolute',
     bottom: 0,
@@ -436,7 +424,7 @@ const styles = StyleSheet.create({
     right: 0,
     height: windowHeight * 0.1,
     overflow: 'hidden',
-    zIndex: 0, // Behind content, above base background
+    zIndex: 0,
   },
   bottomCurve: {
     flex: 1,
@@ -445,43 +433,40 @@ const styles = StyleSheet.create({
     borderTopRightRadius: windowHeight * 0.5,
     transform: [{ translateY: windowHeight * 0.05 }]
   },
-
-  // --- Background Bubble Styles ---
   backgroundBubbleBase: {
       position: 'absolute',
-      // Bubbles should be behind everything visual except the root background
       zIndex: 0,
   },
   bubble1: {
-      width: windowWidth * 0.6, // Large bubble
+      width: windowWidth * 0.6,
       height: windowWidth * 0.6,
       borderRadius: windowWidth * 0.3,
       backgroundColor: BUBBLE_COLOR_1,
-      top: -windowWidth * 0.2, // Position partially off-screen top-left
+      top: -windowWidth * 0.2,
       left: -windowWidth * 0.25,
   },
   bubble2: {
-      width: windowWidth * 0.4, // Medium bubble
+      width: windowWidth * 0.4,
       height: windowWidth * 0.4,
       borderRadius: windowWidth * 0.2,
       backgroundColor: BUBBLE_COLOR_2,
-      top: windowHeight * 0.2, // Position near middle-right
-      right: -windowWidth * 0.15, // Partially off-screen
+      top: windowHeight * 0.2,
+      right: -windowWidth * 0.15,
   },
   bubble3: {
-      width: windowWidth * 0.3, // Small bubble
+      width: windowWidth * 0.3,
       height: windowWidth * 0.3,
       borderRadius: windowWidth * 0.15,
       backgroundColor: BUBBLE_COLOR_1,
-      bottom: windowHeight * 0.15, // Position near bottom-left (above curve)
+      bottom: windowHeight * 0.15,
       left: windowWidth * 0.05,
   },
    bubble4: {
-      width: windowWidth * 0.5, // Another medium/large one
+      width: windowWidth * 0.5,
       height: windowWidth * 0.5,
       borderRadius: windowWidth * 0.25,
       backgroundColor: BUBBLE_COLOR_2,
-      bottom: -windowWidth * 0.1, // Position partially below bottom curve start
+      bottom: -windowWidth * 0.1,
       right: -windowWidth * 0.1,
   },
 });
