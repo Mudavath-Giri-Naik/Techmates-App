@@ -1,6 +1,9 @@
 // app/navigation/AppNavigator.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, ActivityIndicator } from 'react-native';
+import { supabase } from '../../utils/supabase';
+import { Session } from '@supabase/supabase-js';
 // We might still need User and onAuthStateChanged if ProfileScreen needs to react to login events
 // but the core navigation won't depend on it at this level anymore.
 // import { User, onAuthStateChanged } from 'firebase/auth';
@@ -10,58 +13,88 @@ import LoginScreen from '../screens/LoginScreen'; // Keep LoginScreen for naviga
 import TabNavigator from './TabNavigator';       // This will now be the primary component
 import CreatePostScreen from '../screens/CreatePostScreen';
 import MessengerScreen from '../screens/MessengerScreen';
+import StudentProfile from '../screens/StudentProfile';
+import ProfileScreen from '../screens/ProfileScreen';
 
 import { RootStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
-  // No longer managing user state at this top level for initial routing
-  // const [user, setUser] = useState<User | null>(null);
-  // const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (authenticatedUser) => {
-  //     setUser(authenticatedUser);
-  //     setLoading(false);
-  //   });
-  //   return unsubscribe;
-  // }, []);
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
-  // if (loading) {
-  //   return (
-  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-  //       <ActivityIndicator size="large" />
-  //     </View>
-  //   );
-  // }
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator
-      initialRouteName="MainApp" // <<<<<<<< KEY CHANGE: Start with MainApp
+      screenOptions={{
+        headerShown: false,
+      }}
+      initialRouteName={session ? "MainApp" : "Login"}
     >
       {/* MainApp (TabNavigator) is now the default entry */}
       <Stack.Screen
         name="MainApp"
         component={TabNavigator}
-        options={{ headerShown: false }}
       />
       {/* LoginScreen is available for navigation but not initial */}
       <Stack.Screen
         name="Login"
         component={LoginScreen}
-        options={{ headerShown: false }} // Or customize as needed, e.g., for a modal presentation
       />
       {/* Other stack screens like CreatePost and Messenger remain */}
       <Stack.Screen
         name="CreatePost"
         component={CreatePostScreen}
-        options={{ title: 'Create Post' }}
+        options={{ 
+          headerShown: true,
+          title: 'Create Post' 
+        }}
       />
       <Stack.Screen
         name="Messenger"
         component={MessengerScreen}
-        options={{ title: 'Messages' }}
+        options={{ 
+          headerShown: true,
+          title: 'Messages' 
+        }}
+      />
+      <Stack.Screen
+        name="StudentProfile"
+        component={StudentProfile}
+        options={{ 
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          headerShown: true,
+          title: 'My Profile'
+        }}
       />
     </Stack.Navigator>
   );

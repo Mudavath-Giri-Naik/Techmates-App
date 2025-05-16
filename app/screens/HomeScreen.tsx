@@ -27,23 +27,6 @@ const HomeScreen = () => {
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-        <Text style={styles.title}>Welcome to Techmates Feed!</Text>
-        <Text style={styles.subtitle}>Here's what's new...</Text>
-        {/* Example Content - Replace with your actual feed components */}
-        <View style={styles.postPlaceholder}>
-          <Text>Post 1 by UserA</Text>
-        </View>
-        <View style={styles.postPlaceholder}>
-          <Text>Post 2 by UserB</Text>
-        </View>
-        <View style={styles.postPlaceholder}>
-          <Text>Post 3 by UserC</Text>
-        </View>
-        
-        {/* Logout button can be moved to ProfileScreen if preferred */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Log Out (Temp)</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -54,35 +37,13 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#fafafa', // Instagram-like background
+    backgroundColor: '#FFFFFF', // Instagram-like background
   },
   container: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 10,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#262626',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#8e8e8e',
-    marginBottom: 20,
-  },
-  postPlaceholder: {
-    width: '100%',
-    height: 300, // Example height
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#dbdbdb',
-    borderRadius: 3,
-    marginBottom: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   logoutButton: {
     marginTop: 20,

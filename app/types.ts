@@ -9,6 +9,8 @@ export type RootStackParamList = {
   MainApp: NavigatorScreenParams<TabParamList>; // MainApp will contain our TabNavigator
   CreatePost: undefined;
   Messenger: undefined;
+  StudentProfile: { studentId: string };
+  Profile: undefined;
 };
 
 // For the Bottom Tab Navigator
@@ -16,7 +18,7 @@ export type TabParamList = {
   HomeTab: undefined; // Renamed to avoid conflict with RootStack's Home
   SearchTab: undefined;
   ResourcesTab: undefined;
-  ProfileTab: undefined;
+  ChatTab: undefined;
 };
 
 // Props for screens in RootStack

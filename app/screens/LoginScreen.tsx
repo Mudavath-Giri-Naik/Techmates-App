@@ -16,15 +16,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types'; // Adjust the path as necessary
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from 'firebase/auth';
-import { FIREBASE_AUTH } from '../../firebaseConfig'; // Path is correct
 import Icon from 'react-native-vector-icons/Feather';
+import { supabase } from '../../utils/supabase';
 
 // --- Configuration ---
-const ALLOWED_EMAIL_DOMAINS = ['@mvgrce.edu.in']; // Keep your domain restriction
+const ALLOWED_EMAIL_DOMAINS = ['@mvgrce.edu.in','@gmail.com']; // Keep your domain restriction
 const PRIMARY_COLOR = '#0052FF';
 const LIGHT_BLUE_ACCENT = '#65a7fc';
 const TEXT_COLOR_DARK = '#1A202C';
@@ -50,8 +46,6 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [generalError, setGeneralError] = useState<string | null>(null);
-
-  const auth = FIREBASE_AUTH;
 
   const validateInputs = useCallback(() => {
     let isValid = true;
@@ -85,40 +79,22 @@ const LoginScreen = () => {
     return isValid;
   }, [email, password]);
 
-   const handleAuthError = (error: any) => {
+  const handleAuthError = (error: any) => {
     let friendlyMessage = 'An unexpected error occurred. Please try again.';
-    const errorCode = error?.code;
     setEmailError(null);
     setPasswordError(null);
 
-    switch (errorCode) {
-        case 'auth/invalid-email':
-            setEmailError('Please enter a valid email address format.');
-            break;
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential': // Catches invalid login attempts generally
-            setGeneralError('Incorrect email or password. Please try again.');
-            break;
-        case 'auth/user-disabled':
-            setGeneralError('This user account has been disabled.');
-            break;
-        case 'auth/email-already-in-use':
-            setGeneralError(null);
-            setEmailError('This email address is already registered. Try signing in or use a different email.');
-            break;
-        case 'auth/weak-password':
-            setGeneralError(null);
-            setPasswordError('Password is too weak. Please use at least 6 characters.');
-            break;
-        case 'auth/too-many-requests':
-            setGeneralError('Access temporarily disabled due to too many attempts. Please try again later.');
-            break;
-        default:
-            console.error("Unhandled Auth Error Code:", errorCode, "Message:", error?.message);
-            setGeneralError(friendlyMessage);
-      }
-    };
+    if (error.message.includes('Invalid login credentials')) {
+      setGeneralError('Incorrect email or password. Please try again.');
+    } else if (error.message.includes('Email not confirmed')) {
+      setGeneralError('Please verify your email address before signing in.');
+    } else if (error.message.includes('User already registered')) {
+      setEmailError('This email address is already registered. Try signing in or use a different email.');
+    } else {
+      console.error("Auth Error:", error);
+      setGeneralError(friendlyMessage);
+    }
+  };
 
   const handleAuthentication = async () => {
     if (!validateInputs()) return;
@@ -126,16 +102,51 @@ const LoginScreen = () => {
     setGeneralError(null);
     try {
       if (isLoginMode) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
         console.log('Signed in successfully!');
-        // navigation.replace('Home'); // REMOVED: AppNavigator will handle navigation
+        navigation.replace('MainApp', { screen: 'HomeTab' });
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        // Sign up
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: email.split('@')[0], // Use email username as initial full_name
+              email_domain: email.split('@')[1],
+            },
+          },
+        });
+
+        if (signUpError) throw signUpError;
+
+        if (authData.user) {
+          // Create profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: authData.user.id,
+                email: email,
+                full_name: email.split('@')[0], // Use email username as initial full_name
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ]);
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            throw new Error('Failed to create user profile');
+          }
+        }
+
         console.log('User account created & signed in!');
-        // navigation.replace('Home'); // REMOVED: AppNavigator will handle navigation
+        navigation.replace('MainApp', { screen: 'HomeTab' });
       }
-      // No explicit navigation needed here.
-      // AppNavigator's onAuthStateChanged will handle navigating to the main app.
     } catch (error: any) {
       console.error("Authentication Error:", error);
       handleAuthError(error);
@@ -146,8 +157,11 @@ const LoginScreen = () => {
 
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
-    setEmail(''); setPassword('');
-    setEmailError(null); setPasswordError(null); setGeneralError(null);
+    setEmail('');
+    setPassword('');
+    setEmailError(null);
+    setPasswordError(null);
+    setGeneralError(null);
     setIsPasswordVisible(false);
   };
 
