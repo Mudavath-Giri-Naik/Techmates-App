@@ -15,6 +15,7 @@ import CreatePostScreen from '../screens/CreatePostScreen';
 import MessengerScreen from '../screens/MessengerScreen';
 import StudentProfile from '../screens/StudentProfile';
 import ProfileScreen from '../screens/ProfileScreen';
+import CommentsScreen from '../screens/CommentsScreen';
 
 import { RootStackParamList } from '../types';
 
@@ -95,6 +96,11 @@ const AppNavigator = () => {
           headerShown: true,
           title: 'My Profile'
         }}
+      />
+      <Stack.Screen
+        name="Comments"
+        component={CommentsScreen}
+        options={{ title: 'Comments' }}
       />
     </Stack.Navigator>
   );

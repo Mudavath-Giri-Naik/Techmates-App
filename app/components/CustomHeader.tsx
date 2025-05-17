@@ -1,5 +1,5 @@
 // app/components/CustomHeader.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Platform,
   StatusBar,
-  ScrollView,
   Image,
   Vibration,
 } from 'react-native';
@@ -20,27 +19,11 @@ const IOS_STATUS_BAR_HEIGHT = 44;
 // Standard height for the main content area of the header (logo, icons)
 const HEADER_CONTENT_AREA_HEIGHT = 60;
 
-const CATEGORIES = [
-  'Home',
-  'Opportunities',
-  'Events',
-  'Competitions',
-  'Achievements',
-  'Hackathons',
-];
-
 const CustomHeader = () => {
   const navigation = useNavigation<RootStackNavigatorProp>();
-  const [selectedCategory, setSelectedCategory] = useState('Home');
 
   // Calculate paddingTop for Android dynamically
   const androidStatusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
-
-  const handleCategoryPress = (category: string) => {
-    Vibration.vibrate(10);
-    setSelectedCategory(category);
-    // Optionally, trigger navigation or filtering here
-  };
 
   return (
     <View
@@ -48,7 +31,7 @@ const CustomHeader = () => {
         styles.headerOuterContainer,
         {
           height:
-            (Platform.OS === 'ios' ? IOS_STATUS_BAR_HEIGHT : androidStatusBarHeight) + HEADER_CONTENT_AREA_HEIGHT + 56,
+            (Platform.OS === 'ios' ? IOS_STATUS_BAR_HEIGHT : androidStatusBarHeight) + HEADER_CONTENT_AREA_HEIGHT,
           paddingTop: Platform.OS === 'ios' ? IOS_STATUS_BAR_HEIGHT : androidStatusBarHeight,
         },
       ]}
@@ -85,35 +68,6 @@ const CustomHeader = () => {
           <Icon name="person-circle" size={32} color="#4A90E2" />
         </TouchableOpacity>
       </View>
-      {/* Category Chips */}
-      <View style={styles.chipScrollContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.chip,
-                selectedCategory === cat && styles.chipSelected,
-              ]}
-              onPress={() => handleCategoryPress(cat)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedCategory === cat && styles.chipTextSelected,
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
     </View>
   );
 };
@@ -121,7 +75,6 @@ const CustomHeader = () => {
 const styles = StyleSheet.create({
   headerOuterContainer: {
     backgroundColor: '#FFFFFF', // White background extends to status bar area
-    
     // `height` and `paddingTop` are set dynamically in the component
   },
   headerInnerContainer: {
@@ -129,7 +82,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    
     height: HEADER_CONTENT_AREA_HEIGHT, // Ensures this inner container has a fixed height for content
   },
   logoContainer: {
@@ -168,45 +120,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
-  },
-  chipScrollContainer: {
-    marginTop: 8,
-    paddingLeft: 8,
-    paddingRight: 8,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  chip: {
-    backgroundColor: '#F5F6FA',
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-  },
-  chipSelected: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
-    elevation: 2,
-    shadowOpacity: 0.12,
-  },
-  chipText: {
-    color: '#1A202C',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  chipTextSelected: {
-    color: '#FFF',
-    fontWeight: '700',
   },
 });
 
