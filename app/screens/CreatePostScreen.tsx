@@ -395,7 +395,7 @@ const CreatePostScreen = () => {
         {images.map((uri, index) => (
           <Image key={index} source={{ uri }} style={styles.imagePreview} />
         ))}
-      </View>
+    </View>
 
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Create Post</Text>

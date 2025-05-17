@@ -16,6 +16,10 @@ import MessengerScreen from '../screens/MessengerScreen';
 import StudentProfile from '../screens/StudentProfile';
 import ProfileScreen from '../screens/ProfileScreen';
 import CommentsScreen from '../screens/CommentsScreen';
+import LikesScreen from '../screens/LikesScreen';
+import StudentProfileScreen from '../screens/StudentProfileScreen';
+import ChatScreen from '../screens/ChatScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 
 import { RootStackParamList } from '../types';
 
@@ -53,29 +57,21 @@ const AppNavigator = () => {
       screenOptions={{
         headerShown: false,
       }}
-      initialRouteName={session ? "MainApp" : "Login"}
+      initialRouteName={session ? "MainTabs" : "Login"}
     >
-      {/* MainApp (TabNavigator) is now the default entry */}
-      <Stack.Screen
-        name="MainApp"
-        component={TabNavigator}
-      />
-      {/* LoginScreen is available for navigation but not initial */}
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-      />
-      {/* Other stack screens like CreatePost and Messenger remain */}
-      <Stack.Screen
-        name="CreatePost"
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Screen 
+        name="CreatePost" 
         component={CreatePostScreen}
         options={{ 
           headerShown: true,
           title: 'Create Post' 
         }}
       />
-      <Stack.Screen
-        name="Messenger"
+      <Stack.Screen 
+        name="Messenger" 
         component={MessengerScreen}
         options={{ 
           headerShown: true,
@@ -86,7 +82,8 @@ const AppNavigator = () => {
         name="StudentProfile"
         component={StudentProfile}
         options={{ 
-          headerShown: false
+          headerShown: true,
+          title: 'Profile'
         }}
       />
       <Stack.Screen
@@ -100,7 +97,26 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Comments"
         component={CommentsScreen}
-        options={{ title: 'Comments' }}
+        options={{ 
+          headerShown: true,
+          title: 'Comments' 
+        }}
+      />
+      <Stack.Screen
+        name="Likes"
+        component={LikesScreen}
+        options={{ 
+          headerShown: true,
+          title: 'Likes' 
+        }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{ 
+          headerShown: true,
+          title: 'Chat' 
+        }}
       />
     </Stack.Navigator>
   );

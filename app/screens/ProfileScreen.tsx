@@ -14,12 +14,17 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../utils/supabase';
-import { RootStackNavigatorProp } from '../types';
+import { RootStackNavigatorProp, TabParamList } from '../types';
+
+// Update the navigation type to include replace
+type ProfileScreenNavigationProp = RootStackNavigatorProp & {
+  replace: (screen: string, params?: any) => void;
+};
 
 interface ProfileData {
   id: string;
@@ -38,7 +43,7 @@ interface ProfileData {
 }
 
 const ProfileScreen = () => {
-  const navigation = useNavigation<RootStackNavigatorProp>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

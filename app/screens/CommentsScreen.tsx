@@ -6,26 +6,37 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
+  Image,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../types';
-import { supabase } from '../../utils/supabase';
-import { Comment } from '../types/post';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { supabase } from '../../utils/supabase';
+import { RootStackNavigatorProp } from '../types';
 
-type CommentsScreenRouteProp = RouteProp<RootStackParamList, 'Comments'>;
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user: {
+    id: string;
+    name: string;
+    profile_image: string;
+  };
+}
 
 const CommentsScreen = () => {
-  const route = useRoute<CommentsScreenRouteProp>();
-  const navigation = useNavigation();
+  const route = useRoute();
+  const navigation = useNavigation<RootStackNavigatorProp>();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const postId = (route.params as any).postId;
 
   useEffect(() => {
     fetchComments();
@@ -37,13 +48,9 @@ const CommentsScreen = () => {
         .from('comments')
         .select(`
           *,
-          user:user_id (
-            id,
-            email,
-            user_metadata
-          )
+          user:Users(id, name, profile_image)
         `)
-        .eq('post_id', route.params.postId)
+        .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -55,10 +62,10 @@ const CommentsScreen = () => {
     }
   };
 
-  const handleSubmitComment = async () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    setSubmitting(true);
+    setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -66,7 +73,7 @@ const CommentsScreen = () => {
       const { error } = await supabase
         .from('comments')
         .insert([{
-          post_id: route.params.postId,
+          post_id: postId,
           user_id: user.id,
           content: newComment.trim(),
         }]);
@@ -76,36 +83,50 @@ const CommentsScreen = () => {
       setNewComment('');
       fetchComments();
     } catch (error) {
-      console.error('Error submitting comment:', error);
+      console.error('Error adding comment:', error);
     } finally {
-      setSubmitting(false);
+      setSending(false);
     }
   };
 
-  const renderComment = ({ item: comment }: { item: Comment }) => (
+  const handleProfilePress = (userId: string) => {
+    navigation.navigate('StudentProfile', { userId });
+  };
+
+  const renderComment = ({ item }: { item: Comment }) => (
     <View style={styles.commentContainer}>
-      <View style={styles.commentHeader}>
-        <Text style={styles.username}>
-          {comment.user?.user_metadata?.full_name || 'User'}
-        </Text>
-        <Text style={styles.timestamp}>
-          {new Date(comment.created_at).toLocaleDateString()}
-        </Text>
-      </View>
-      <Text style={styles.commentText}>{comment.content}</Text>
+      <TouchableOpacity 
+        style={styles.userInfo}
+        onPress={() => handleProfilePress(item.user.id)}
+      >
+        <Image
+          source={{ 
+            uri: item.user.profile_image || 
+            `https://avatar.iran.liara.run/username?username=${item.user.name}`
+          }}
+          style={styles.avatar}
+        />
+        <View style={styles.commentContent}>
+          <Text style={styles.username}>{item.user.name}</Text>
+          <Text style={styles.commentText}>{item.content}</Text>
+          <Text style={styles.timestamp}>
+            {new Date(item.created_at).toLocaleDateString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0095f6" />
+        <ActivityIndicator size="large" color="#4A90E2" />
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
@@ -115,32 +136,24 @@ const CommentsScreen = () => {
         renderItem={renderComment}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.commentsList}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No comments yet</Text>
-            <Text style={styles.emptySubtext}>Be the first to comment!</Text>
-          </View>
-        }
       />
-
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Add a comment..."
           value={newComment}
           onChangeText={setNewComment}
+          placeholder="Add a comment..."
           multiline
-          maxLength={500}
         />
         <TouchableOpacity
-          style={[styles.submitButton, !newComment.trim() && styles.submitButtonDisabled]}
-          onPress={handleSubmitComment}
-          disabled={!newComment.trim() || submitting}
+          style={[styles.sendButton, !newComment.trim() && styles.sendButtonDisabled]}
+          onPress={handleAddComment}
+          disabled={!newComment.trim() || sending}
         >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#fff" />
+          {sending ? (
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Icon name="send" size={24} color="#fff" />
+            <Icon name="send" size={24} color="#FFF" />
           )}
         </TouchableOpacity>
       </View>
@@ -151,7 +164,7 @@ const CommentsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF',
   },
   loadingContainer: {
     flex: 1,
@@ -159,70 +172,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   commentsList: {
-    padding: 15,
+    padding: 16,
   },
   commentContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  commentHeader: {
+  userInfo: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
+    alignItems: 'flex-start',
   },
-  username: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  timestamp: {
-    color: '#666',
-    fontSize: 12,
-  },
-  commentText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 30,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#262626',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginRight: 10,
-    maxHeight: 100,
-  },
-  submitButton: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#0095f6',
+    marginRight: 12,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  username: {
+    fontWeight: '600',
+    fontSize: 16,
+    color: '#1A202C',
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 15,
+    color: '#4A5568',
+    marginBottom: 4,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#718096',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    backgroundColor: '#FFF',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F5F6FA',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    maxHeight: 100,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#4A90E2',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  submitButtonDisabled: {
-    backgroundColor: '#b2dffc',
+  sendButtonDisabled: {
+    opacity: 0.5,
   },
 });
 

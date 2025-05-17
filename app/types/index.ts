@@ -1,20 +1,19 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { RouteProp } from '@react-navigation/native';
+import { PostType } from './post';
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  MainApp: {
-    screen?: string;
-    params?: {
-      selectedCategory?: string;
-    };
-  };
-  CreatePost: { postType: string };
+  MainTabs: undefined;
+  CreatePost: { postType: PostType };
   Comments: { postId: string };
-  StudentProfile: { userId: string; showBackButton?: boolean };
-  Profile: undefined;
+  Likes: { postId: string };
+  StudentProfile: { studentId: string };
+  Messenger: undefined;
+  Chat: { userId: string; userName: string };
 };
 
 export interface HomeTabParams {
@@ -22,13 +21,12 @@ export interface HomeTabParams {
 }
 
 export type TabParamList = {
-  HomeTab: HomeTabParams;
-  SearchTab: undefined;
-  ResourcesTab: undefined;
-  ChatTab: undefined;
+  HomeTab: { selectedCategory?: string };
+  ProfileTab: undefined;
+  CreatePostTab: undefined;
+  MessengerTab: undefined;
 };
 
-export type RootStackNavigatorProp = CompositeNavigationProp<
-  NativeStackNavigationProp<RootStackParamList>,
-  BottomTabNavigationProp<TabParamList>
->; 
+export type RootStackNavigatorProp = NativeStackNavigationProp<RootStackParamList>;
+
+export type HomeScreenRouteProp = RouteProp<TabParamList, 'HomeTab'>; 
